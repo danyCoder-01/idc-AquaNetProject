@@ -9,22 +9,23 @@ BAUDRATE = 19200
 APP_KEY = "1C55D10DCBABDA137AA8542FA4314DE3"
 APP_EUI = "0000000000000000"
 
-# INTERVALO DE ENVÍO: 15 minutos (900 segundos) para cumplir el ciclo de trabajo LoRa
-INTERVALO_ENVIO = 900 
+# TEMPORIZACIÓN (En segundos)
+INTERVALO_ENVIO = 900       # 15 minutos entre transmisiones (Normativa LoRaWAN)
+TIEMPO_RIEGO_SEGUNDOS = 30  # Duración activa del riego antes del apagado automático
 
 # ==========================================
 # INICIALIZACIÓN DE PERIFÉRICOS (HARDWARE)
 # ==========================================
-# 1. Módulo LoRa-E5 (UART0: GP0=TX, GP1=RX)
+# 1. Módulo Grove LoRa-E5 (UART0: GP0=TX, GP1=RX)
 lora = UART(0, baudrate=BAUDRATE, tx=Pin(0), rx=Pin(1), timeout=5000)
 
 # 2. Sensor de Temperatura y Humedad DHT11 (GPIO 15)
 sensor_dht = dht.DHT11(Pin(15))
 
-# 3. Módulo Relé de 5V (GPIO 14)
-# NOTA: Los módulos de relés de 5V suelen ser "Active Low" (se activan con un 0 lógico)
-valvula = Pin(14, Pin.OUT)
-valvula.value(1) # Arranca apagado (Válvula Cerrada)
+# 3. Módulo Relé de 5V para Electroválvula (GPIO 14)
+# Solución de arranque: Se inicializa como ENTRADA (Alta impedancia).
+# Al no haber paso de corriente, el relé arranca apagado de forma segura.
+valvula = Pin(14, Pin.IN)
 
 # ==========================================
 # FUNCIONES LÓGICAS Y COMANDOS AT
@@ -32,7 +33,7 @@ valvula.value(1) # Arranca apagado (Válvula Cerrada)
 def enviar_cmd(comando, espera=1):
     """Envía un comando AT al módulo LoRa y devuelve su respuesta limpia."""
     if lora.any():
-        lora.read() # Limpieza de buffer
+        lora.read() # Limpieza del buffer de entrada de la UART
         
     print(f"[UART] Enviando: {comando}")
     lora.write(comando + "\r\n")
@@ -44,11 +45,11 @@ def enviar_cmd(comando, espera=1):
             print(f"[UART] Respuesta:\n{respuesta.strip()}")
             return respuesta
         except:
-            print("[ERROR] No se pudo decodificar la respuesta.")
+            print("[ERROR] Fallo en la decodificación de la respuesta UART.")
     return ""
 
 def inicializar_modulo():
-    """Configura los parámetros de identidad y región del módulo."""
+    """Configura los parámetros de red e identidad del módulo Grove LoRa-E5."""
     print("\n--- [FASE 1] CONFIGURANDO HARDWARE LORA ---")
     enviar_cmd("AT+DR=EU868")
     enviar_cmd("AT+MODE=OTAA")
@@ -56,17 +57,17 @@ def inicializar_modulo():
     enviar_cmd(f'AT+KEY=APPKEY,"{APP_KEY}"')
 
 def conectar_lorawan():
-    """Lanza el intento de JOIN en bucle hasta conectar."""
+    """Ejecuta el procedimiento de JOIN (OTAA) mediante reintentos."""
     print("\n--- [FASE 2] INICIANDO APRETÓN DE MANOS (JOIN) ---")
     conectado = False
     intento = 1
     
     while not conectado:
-        print(f"\n[Intento {intento}] Lanzando petición al aire...")
+        print(f"\n[Intento {intento}] Transmitiendo petición de acceso...")
         respuesta = enviar_cmd("AT+JOIN", espera=12)
         
         if "joined" in respuesta.lower() or "success" in respuesta.lower():
-            print("\nMódulo enlazado correctamente a The Things Network.")
+            print("\nEnlace establecido correctamente con The Things Network.")
             conectado = True
         else:
             print(f"\n[!] Fallo de Join. Reintentando en 15 segundos...")
@@ -74,17 +75,25 @@ def conectar_lorawan():
             time.sleep(15)
 
 def leer_sensores_locales():
-    """Lee el DHT11 y devuelve la Humedad, Temperatura y Estado de la Válvula."""
+    """Ejecuta la lectura del bus One-Wire del DHT11 y evalúa el estado del relé."""
     try:
         sensor_dht.measure()
         h = sensor_dht.humidity()
         t = sensor_dht.temperature()
     except Exception as e:
         print(f"[HARDWARE ERROR] Fallo al leer DHT11: {e}")
-        h, t = 0, 0 # Valores de rescate en caso de fallo físico
+        h, t = 0, 0 # Valores seguros por defecto ante fallo físico
         
-    # Mapeo del Relé: Si el pin está en 0 (GND), el relé conmuta y abre la válvula (1)
-    estado_valvula = 1 if valvula.value() == 0 else 0
+    # Mapeo lógico del Relé bajo la solución de impedancia:
+    # Si el pin está configurado como SALIDA (OUT) y su valor es 0, el relé está activado (1).
+    # Si está configurado como ENTRADA (IN), está en reposo/apagado (0).
+    # Usamos try/except por si el método mode() no está disponible en esta compilación de MicroPython.
+    try:
+        # Si el relé está en modo salida y a nivel bajo, está conmutado
+        estado_valvula = 1 if (valvula.value() == 0 and Pin(14).mode() == Pin.OUT) else 0
+    except:
+        # Alternativa de lectura directa si falla la introspección de modo
+        estado_valvula = 0 if valvula.value() == 1 else 1
     
     return h, t, estado_valvula
 
@@ -92,7 +101,6 @@ def leer_sensores_locales():
 # FLUJO PRINCIPAL DEL PROGRAMA
 # ==========================================
 try:
-    # Ejecutamos la configuración y el enlace inicial
     inicializar_modulo()
     conectar_lorawan()
     
@@ -101,24 +109,53 @@ try:
     while True:
         print("\n--- [NUEVA RECOLECCIÓN DE DATOS] ---")
         
-        # 1. Recolectar variables reales
+        # 1. Adquisición de telemetría física
         humedad, temperatura, estado_valvula = leer_sensores_locales()
         print(f"[INFO] Humedad: {humedad}% | Temp: {temperatura}°C | Válvula: {estado_valvula}")
         
-        # 2. Empaquetar en estructura binaria (3 Bytes puros)
+        # 2. Empaquetado binario (3 Bytes) y conversión a Hexadecimal
         payload = bytes([humedad, temperatura, estado_valvula])
-        
-        # 3. Codificar a texto Hexadecimal puro (Ej: bytes [42, 22, 0] -> "2a1600")
         hex_payload = "".join("{:02x}".format(b) for b in payload)
         
-        # 4. Transmitir por radio a través del comando MSGHEX de LoRa-E5
-        # Le damos 5 segundos de espera para procesar el envío y escuchar posibles downlinks
-        print(f"[LoRaWAN] Enviando Payload útil: {hex_payload}")
-        enviar_cmd(f'AT+MSGHEX="{hex_payload}"', espera=5)
+        # 3. Transmisión Uplink y captura de la ventana de recepción (RX)
+        print(f"[LoRaWAN] Transmitiendo Payload útil: {hex_payload}")
+        respuesta_uart = enviar_cmd(f'AT+MSGHEX="{hex_payload}"', espera=5)
         
-        # 5. Dormir el sistema hasta la próxima lectura
-        print(f"[CLOCK] Durmiendo durante {INTERVALO_ENVIO // 60} minutos...")
-        time.sleep(INTERVALO_ENVIO)
+        # 4. Procesamiento del Downlink con Solución por Software de Alta Impedancia
+        respuesta_limpia = respuesta_uart.lower().replace('"', '').replace("'", "")
+        
+        if "rx:" in respuesta_limpia:
+            print("[LoRaWAN] Mensaje de bajada detectado en la ventana RX.")
+            
+            # Evaluación de la carga útil recibida
+            if "rx: 01" in respuesta_limpia or "rx:01" in respuesta_limpia:
+                print("[ACTUADOR] Orden de apertura validada. Activando relé.")
+                
+                # Modificación dinámica: Reconfiguramos el pin como salida y lo llevamos a masa (0V)
+                valvula = Pin(14, Pin.OUT)
+                valvula.value(0)  
+                
+                # Temporización síncrona en el dispositivo
+                print(f"[ACTUADOR] Temporizador iniciado: Riego activo durante {TIEMPO_RIEGO_SEGUNDOS} segundos.")
+                time.sleep(TIEMPO_RIEGO_SEGUNDOS)
+                
+                print("[ACTUADOR] Temporizador finalizado. Forzando cierre de válvula (Alta impedancia).")
+                # Modificación dinámica: Cambiamos el pin a ENTRADA para simular la desconexión física
+                valvula = Pin(14, Pin.IN) 
+                
+            elif "rx: 00" in respuesta_limpia or "rx:00" in respuesta_limpia:
+                print("[ACTUADOR] Orden de cierre directa validada. Desactivando relé (Alta impedancia).")
+                valvula = Pin(14, Pin.IN) 
+        else:
+            print("[LoRaWAN] Ventana RX finalizada sin instrucciones del servidor.")
+        
+        # 5. Suspensión del proceso (Compensando el tiempo empleado en regar)
+        tiempo_suspension = INTERVALO_ENVIO
+        if "rx: 01" in respuesta_limpia or "rx:01" in respuesta_limpia:
+            tiempo_suspension = max(0, INTERVALO_ENVIO - TIEMPO_RIEGO_SEGUNDOS)
+            
+        print(f"[CLOCK] Ciclo finalizado. Suspensión durante {tiempo_suspension // 60} minutes...\n")
+        time.sleep(tiempo_suspension)
         
 except Exception as e:
-    print(f"\n[CRITICAL ERROR] Ocurrió un fallo en el programa: {e}")
+    print(f"\n[CRITICAL ERROR] Excepción no controlada en el flujo principal: {e}")
