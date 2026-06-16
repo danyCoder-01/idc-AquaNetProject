@@ -506,7 +506,7 @@
         "width": 0,
         "height": 0,
         "passthru": false,
-        "label": "Forzar Riego Manual (30s)",
+        "label": "Forzar Riego Manual (5 min)",
         "tooltip": "",
         "color": "",
         "bgcolor": "",
