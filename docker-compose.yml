@@ -5,12 +5,14 @@ services:
     ports:
       - "1880:1880"
     dns:
-      - 8.8.8.8
       - 1.1.1.1
+      - 8.8.8.8
     environment:
       - TZ=Europe/Madrid
     volumes:
       - nodered_data:/data
-      # Mapeo directo de tus flujos al archivo por defecto de Node-RED
       - ./flujos_node-red_idc.json:/data/flows.json
     restart: always
+    
+volumes:
+  nodered_data:
