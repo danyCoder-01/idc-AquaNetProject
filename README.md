@@ -1,4 +1,4 @@
-#Sistema IoT de Riego Automático de Largo Alcance mediante LoRa **Asociado a:** Universidad Politècnica de València (Asignatura: Internet de las Cosas) 
+# Sistema IoT de Riego Automático de Largo Alcance mediante LoRa **Asociado a:** Universidad Politècnica de València (Asignatura: Internet de las Cosas) 
 
 **Descripción:**
 Diseño y desarrollo integral de un sistema IoT de bucle cerrado orientado a la agricultura de precisión en zonas remotas sin conectividad convencional. El proyecto abarca desde la capa física y adquisición de datos en el *Edge* hasta la automatización inteligente en la nube.
