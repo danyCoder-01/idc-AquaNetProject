@@ -1,0 +1,15 @@
+services:
+  node-red:
+    image: nodered/node-red:latest
+    container_name: nodered
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      - TZ=Europe/Madrid
+    volumes:
+      - nodered_data:/data
+    restart: always
+
+volumes:
+  nodered_data:
