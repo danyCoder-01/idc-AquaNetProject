@@ -3,7 +3,7 @@ import time
 import dht
 
 BAUDRATE = 19200
-APP_KEY = "1C55D10DCBABDA137AA8542FA4314DE3"
+APP_KEY = "APPIKEY" #Por cuestiones de seguridad se ha eliminado la key personal
 APP_EUI = "0000000000000000"
 
 INTERVALO_ENVIO = 900          
