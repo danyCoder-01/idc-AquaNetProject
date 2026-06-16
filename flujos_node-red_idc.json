@@ -1,0 +1,555 @@
+[
+    {
+        "id": "f6f2187d.f17ca8",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "f21b36475bf58593",
+        "type": "mqtt-broker",
+        "name": "idc",
+        "broker": "eu1.cloud.thethings.network:1883",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "a171cfd4277b2aaa",
+        "type": "ui_tab",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "4713a338863eb2ac",
+        "type": "ui_base",
+        "theme": {
+            "name": "theme-light",
+            "lightTheme": {
+                "default": "#0094CE",
+                "baseColor": "#0094CE",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": true,
+                "reset": false
+            },
+            "darkTheme": {
+                "default": "#097479",
+                "baseColor": "#097479",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": false
+            },
+            "customTheme": {
+                "name": "Untitled Theme 1",
+                "default": "#4B7930",
+                "baseColor": "#4B7930",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+            },
+            "themeState": {
+                "base-color": {
+                    "default": "#0094CE",
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-titlebar-backgroundColor": {
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-backgroundColor": {
+                    "value": "#fafafa",
+                    "edited": false
+                },
+                "page-sidebar-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-textColor": {
+                    "value": "#1bbfff",
+                    "edited": false
+                },
+                "group-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "widget-textColor": {
+                    "value": "#111111",
+                    "edited": false
+                },
+                "widget-backgroundColor": {
+                    "value": "#0094ce",
+                    "edited": false
+                },
+                "widget-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "base-font": {
+                    "value": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+                }
+            },
+            "angularTheme": {
+                "primary": "indigo",
+                "accents": "blue",
+                "warn": "red",
+                "background": "grey",
+                "palette": "light"
+            }
+        },
+        "site": {
+            "name": "Node-RED Dashboard",
+            "hideToolbar": "false",
+            "allowSwipe": "false",
+            "lockMenu": "false",
+            "allowTempTheme": "true",
+            "dateFormat": "DD/MM/YYYY",
+            "sizes": {
+                "sx": 48,
+                "sy": 48,
+                "gx": 6,
+                "gy": 6,
+                "cx": 6,
+                "cy": 6,
+                "px": 0,
+                "py": 0
+            }
+        }
+    },
+    {
+        "id": "38a0667b9fee52ba",
+        "type": "ui_group",
+        "name": "GaugeIDC",
+        "tab": "a171cfd4277b2aaa",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "d5e8911784fa9e55",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 600,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "9ad6c093bf5c44b7",
+        "type": "mqtt in",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "topic": "v3/+/devices/+/up",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "f21b36475bf58593",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 100,
+        "y": 40,
+        "wires": [
+            [
+                "4c09f540b5012d9d"
+            ]
+        ]
+    },
+    {
+        "id": "4c09f540b5012d9d",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Decodificar LoRaWAN",
+        "func": "if (msg.payload && msg.payload.uplink_message && msg.payload.uplink_message.frm_payload) {\n\n    let b64Payload = msg.payload.uplink_message.frm_payload;\n    let rawBytes = Buffer.from(b64Payload, 'base64');\n\n    // Desempaquetado según el nuevo orden del firmware:\n    let humedad = rawBytes[0];\n    let temperatura = rawBytes[1];\n    let valvulaEstado = rawBytes[2];\n\n    // Creamos el objeto limpio\n    msg.payload = {\n        dispositivo: msg.payload.end_device_ids.device_id,\n        humedad: humedad,\n        temperatura: temperatura,\n        valvula: valvulaEstado === 1 ? \"ABIERTA\" : \"CERRADA\",\n        valvula_bin: valvulaEstado,\n        timestamp: msg.payload.received_at\n    };\n\n    return msg;\n}\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 360,
+        "y": 40,
+        "wires": [
+            [
+                "d249db301e3eaf0b",
+                "d5e8911784fa9e55",
+                "361c646fcf323cc5"
+            ]
+        ]
+    },
+    {
+        "id": "e00b2427ec432805",
+        "type": "ui_gauge",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "group": "38a0667b9fee52ba",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Humedad Del Suelo",
+        "label": "units",
+        "format": "{{value}}%",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 400,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "d249db301e3eaf0b",
+        "type": "change",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.humedad",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 140,
+        "y": 140,
+        "wires": [
+            [
+                "0c5a81a58fbe540b",
+                "e00b2427ec432805"
+            ]
+        ]
+    },
+    {
+        "id": "0c5a81a58fbe540b",
+        "type": "ui_chart",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "group": "38a0667b9fee52ba",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "Hitstórico de Humedad",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "24",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 400,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c16362587b806a95",
+        "type": "inject",
+        "z": "f6f2187d.f17ca8",
+        "name": "Disparador Horario",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "3600",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 260,
+        "wires": [
+            [
+                "af69794ce9340959"
+            ]
+        ]
+    },
+    {
+        "id": "af69794ce9340959",
+        "type": "http request",
+        "z": "f6f2187d.f17ca8",
+        "name": "Consultar Open-Meteo",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=39.4697&longitude=-0.3774&daily=precipitation_sum&timezone=Europe/Madrid&forecast_days=1",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 320,
+        "y": 260,
+        "wires": [
+            [
+                "84695ffdbaadc126"
+            ]
+        ]
+    },
+    {
+        "id": "84695ffdbaadc126",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Guardar lluvia en memoria",
+        "func": "// Validamos que el JSON contenga los datos meteorológicos esperados\nif (msg.payload && msg.payload.daily && msg.payload.daily.precipitation_sum) {\n\n    // Extraemos los mm de lluvia previstos para hoy\n    let lluviaHoy = msg.payload.daily.precipitation_sum[0];\n\n    // Guardamos el valor en la memoria global del flujo\n    flow.set(\"lluviaPrevistaHoy\", lluviaHoy);\n\n    // Preparamos la salida para el debug\n    msg.payload = {\n        estado: \"API OK\",\n        lluvia_hoy_mm: lluviaHoy\n    };\n    return msg;\n} else {\n    node.warn(\"La API no respondió con el formato correcto o está inaccesible.\");\n    return null;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 260,
+        "wires": [
+            [
+                "ed9ce108f561e558",
+                "aa69d72ad0c1c782"
+            ]
+        ]
+    },
+    {
+        "id": "ed9ce108f561e558",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 760,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "361c646fcf323cc5",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Evaluar Riego Automático",
+        "func": "// Extraction de la telemetría actual del dispositivo\nlet humedadActual = msg.payload.humedad;\n\n// Recuperación de la predicción de precipitación desde el contexto global\nlet lluviaPrevista = flow.get(\"lluviaPrevistaHoy\") || 0;\n\n// Log de control en la consola de Node-RED\nnode.warn(`[LÓGICA] Evaluación: Humedad ${humedadActual}% | Previsión Lluvia: ${lluviaPrevista}mm`);\n\n// Condición lógica de activación (Umbral crítico por debajo del 40%)\nif (humedadActual < 45 && lluviaPrevista < 1) {\n\n    node.warn(\"Estado: Sequía detectada. Generando orden de apertura.\");\n\n    // El protocolo de bajada de The Things Network requiere codificación Base64.\n    // El byte 1 (comando de apertura) se traduce a \"AQ==\" en Base64.\n    let payloadBase64 = Buffer.from([1]).toString('base64');\n\n    // Estructura de carga útil compatible con The Things Stack v3\n    msg.payload = {\n        \"downlinks\": [\n            {\n                \"frm_payload\": payloadBase64,\n                \"f_port\": 15,          // Puerto lógico asignado al actuador\n                \"priority\": \"NORMAL\"\n            }\n        ]\n    };\n\n    // Enrutamiento dinámico mediante el Topic MQTT de la aplicación\n    msg.topic = \"v3/idc-aquanetproject@ttn/devices/riego-pico-1/down/push\";\n\n    return msg;\n}\n\n// Si los parámetros no cumplen el criterio de riego, se aborta la ejecución del flujo\nnode.warn(\"Estado: Nivel de humedad adecuado o precipitación inminente. Ejecución desestimada.\");\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 670,
+        "y": 100,
+        "wires": [
+            [
+                "4d2ca7b0ceaf3628"
+            ]
+        ]
+    },
+    {
+        "id": "4d2ca7b0ceaf3628",
+        "type": "mqtt out",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "f21b36475bf58593",
+        "x": 970,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "be8d9a681fb864f8",
+        "type": "ui_gauge",
+        "z": "f6f2187d.f17ca8",
+        "name": "Previsión lluvia",
+        "group": "38a0667b9fee52ba",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Previsión lluvia",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 10,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 340,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "aa69d72ad0c1c782",
+        "type": "change",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.lluvia_hoy_mm",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 140,
+        "y": 320,
+        "wires": [
+            [
+                "be8d9a681fb864f8"
+            ]
+        ]
+    },
+    {
+        "id": "bcdd0e890240a984",
+        "type": "ui_button",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "group": "38a0667b9fee52ba",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Forzar Riego Manual (30s)",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "opacity",
+        "payload": "1",
+        "payloadType": "num",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 160,
+        "y": 460,
+        "wires": [
+            [
+                "772207f227f82e45"
+            ]
+        ]
+    },
+    {
+        "id": "772207f227f82e45",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Construir Downlink Manual",
+        "func": "// Validamos que la pulsación del botón sea correcta\nif (msg.payload === 1) {\n\n    // El byte 1 activa el relé. En Base64 se codifica como \"AQ==\"\n    let payloadBase64 = Buffer.from([1]).toString('base64');\n\n    // Estructura JSON requerida por el API MQTT de The Things Stack v3\n    msg.payload = {\n        \"downlinks\": [\n            {\n                \"frm_payload\": payloadBase64,\n                \"f_port\": 15,          // Mismo puerto lógico que usa el firmware\n                \"priority\": \"HIGH\"     // Prioridad alta para saltarse colas ordinarias\n            }\n        ]\n    };\n\n    // Enrutamiento al dispositivo específico en vuestra aplicación TTN\n    msg.topic = \"v3/idc-aquanetproject@ttn/devices/riego-pico-1/down/push\";\n\n    return msg;\n}\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 460,
+        "wires": [
+            [
+                "4d2ca7b0ceaf3628"
+            ]
+        ]
+    },
+    {
+        "id": "6062c43d01efb88e",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]
